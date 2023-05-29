@@ -206,12 +206,14 @@ fn from_int64(info: &BasicTypeInfo, scale: i32, precision: i32) -> Result<DataTy
         (None, ConvertedType::INT_64) => Ok(DataType::Int64),
         (None, ConvertedType::UINT_64) => Ok(DataType::UInt64),
         (None, ConvertedType::TIME_MICROS) => Ok(DataType::Time64(TimeUnit::Microsecond)),
-        (None, ConvertedType::TIMESTAMP_MILLIS) => {
-            Ok(DataType::Timestamp(TimeUnit::Millisecond, None))
-        }
-        (None, ConvertedType::TIMESTAMP_MICROS) => {
-            Ok(DataType::Timestamp(TimeUnit::Microsecond, None))
-        }
+        (None, ConvertedType::TIMESTAMP_MILLIS) => Ok(DataType::Timestamp(
+            TimeUnit::Millisecond,
+            Some("UTC".into()),
+        )),
+        (None, ConvertedType::TIMESTAMP_MICROS) => Ok(DataType::Timestamp(
+            TimeUnit::Microsecond,
+            Some("UTC".into()),
+        )),
         (Some(LogicalType::Decimal { scale, precision }), _) => {
             decimal_type(scale, precision)
         }
@@ -235,7 +237,13 @@ fn from_byte_array(info: &BasicTypeInfo, precision: i32, scale: i32) -> Result<D
         (None, ConvertedType::BSON) => Ok(DataType::Binary),
         (None, ConvertedType::ENUM) => Ok(DataType::Binary),
         (None, ConvertedType::UTF8) => Ok(DataType::Utf8),
-        (Some(LogicalType::Decimal { scale: s, precision: p }), _) => decimal_type(s, p),
+        (
+            Some(LogicalType::Decimal {
+                scale: s,
+                precision: p,
+            }),
+            _,
+        ) => decimal_type(s, p),
         (None, ConvertedType::DECIMAL) => decimal_type(scale, precision),
         (logical, converted) => Err(arrow_err!(
             "Unable to convert parquet BYTE_ARRAY logical type {:?} or converted type {}",
